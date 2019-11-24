@@ -1,0 +1,45 @@
+# Install aide and generate the database
+---
+- name: Install and configure AIDE
+  hosts: rpas-pms-t2.ctdo.mph.lan
+  become: yes
+  become_user: root
+
+  vars:
+  - baseline_file: /var/lib/aide/aide.db.gz
+  - scan_file:     /var/lib/aide/aide.db.new.gz
+
+  tasks:
+
+  - name: Ensure AIDE is installed
+    yum:
+      name:        aide
+      state:       latest
+
+  - name: Check for previous scan
+    stat:          path={{ scan_file }}
+    register:      scan
+
+  - name: Check for baseline scan
+    stat:          path={{ baseline_file }}
+    register:      baseline
+
+  - name: Generate initial database
+    command:       /sbin/aide -i
+    when:
+      - scan.stat.exists == False
+      #- baseline.stat.exists == False
+
+  - name: Move initial database to baseline
+    command:       mv {{ scan_file }} {{ baseline_file }}
+    when:
+      - scan.stat.exists == True
+      - baseline.stat.exists == False
+
+  - name: Compare baseline
+    command:  /sbin/aide --check
+    when:
+      - scan.stat.exists == True
+      - baseline.stat.exists == True
+
+
