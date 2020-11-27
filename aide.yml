@@ -1,7 +1,7 @@
 # Install aide and generate the database
 ---
 - name: Install and configure AIDE
-  hosts: rpas-pms-t2.ctdo.mph.lan
+  hosts: all
   become: yes
   become_user: root
 
